@@ -23,17 +23,4 @@ describe("create", () => {
 
         expect(data.id).toBe(4)
     });
-
-    // it("correct response without meta", async () => {
-    //     const { data } = await dataProvider(client).create({
-    //         resource: "posts",
-    //         variables: {
-    //             title: "foo",
-    //             content: "bar",
-    //             category: "2",
-    //         },
-    //     });
-
-    //     expect(data["id"]).toEqual("44");
-    // });
 });

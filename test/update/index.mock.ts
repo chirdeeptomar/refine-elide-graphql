@@ -1,24 +1,11 @@
 import nock from "nock";
-import { ELIDE_GRAPHQL_API_URL } from "../utils";
 
-nock(ELIDE_GRAPHQL_API_URL, { encodedQueryParams: true })
-    .patch("/group/com.example.repository", {
-        "data":
-        {
-            "type": "group",
-            "id": "com.example.repository",
-            "attributes": { "description": "Updated Repository Group" }
-        }
-    })
-    .reply(204);
+import { ELIDE_GRAPHQL_ENDPOINT, ELIDE_SERVICE_URL } from "../utils"
 
-nock(ELIDE_GRAPHQL_API_URL, { encodedQueryParams: true })
-    .patch("/group/1004", {
-        "data":
-        {
-            "type": "group",
-            "id": "1004",
-            "attributes": { "description": "Updated Repository Group" }
-        }
-    })
-    .reply(404, { "errors": [{ "detail": "Unknown identifier 1004 for group" }] });
+nock(ELIDE_SERVICE_URL)
+    .post(ELIDE_GRAPHQL_ENDPOINT,
+        "{\"query\":\"mutation ($op: ElideRelationshipOp, $data: [PostInput]) {\\n      post (op: $op, data: $data) {\\n    edges { node { id } }\\n  }\\n    }\",\"variables\":{\"op\":\"UPDATE\",\"data\":{\"id\":1,\"title\":\"foo\",\"content\":\"bar\"}}}"
+    )
+    .reply(200,
+        { "data": { "post": { "edges": [{ "node": { "id": 4 } }] } } }
+    );

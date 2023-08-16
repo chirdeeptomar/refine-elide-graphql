@@ -8,17 +8,19 @@ describe("custom", () => {
             url: "",
             method: "get",
             meta: {
-                operation: "posts",
+                operation: "post",
                 variables: {
-                    sort: "id:asc",
-                    where: { value: { title_contains: "foo" }, type: "JSON" },
+                    sort: "id", // use "-id" for desc
+                    filter: {
+                        value: 'title==1'
+                    },
                 },
-                fields: ["id", "title", { category: ["id"] }],
+                fields: ["id", "title"],
             },
         });
 
-        expect(response?.data[0].id).toBe("21");
-        expect(response?.data[0].title).toBe("updated-foo-2");
+        expect(response?.data.edges[0].node.id).toBe("9");
+        expect(response?.data.edges[0].node.title).toBe("das");
     });
 
     it("correct get mutation response", async () => {
@@ -26,14 +28,14 @@ describe("custom", () => {
             url: "",
             method: "post",
             meta: {
-                operation: "updatePost",
+                operation: "post",
                 variables: {
                     input: {
                         value: {
                             where: { id: "32" },
                             data: { title: "custom-foo" },
                         },
-                        type: "updatePostInput",
+                        type: "PostInput",
                     },
                 },
                 fields: [
@@ -46,7 +48,7 @@ describe("custom", () => {
             },
         });
 
-        expect(response?.data.post.id).toBe("32");
-        expect(response?.data.post.title).toBe("custom-foo");
+        expect(response?.data.edges.node.id).toBe("32");
+        expect(response?.data.edges.node.title).toBe("custom-foo");
     });
 });

@@ -1,10 +1,10 @@
-import { DataProvider, BaseRecord, GetListResponse } from "@refinedev/core";
+import { DataProvider, BaseRecord } from "@refinedev/core";
 import { ClientError, GraphQLClient } from "graphql-request";
 import * as gql from "gql-query-builder";
 import pluralize from "pluralize";
 import camelCase from "camelcase";
 import { generateFilter, generateSort } from "./utils";
-import { GraphQLError, GraphQLErrorOptions } from "graphql";
+import { GraphQLError } from "graphql";
 
 
 const capitalize = (s: string) => s[0].toUpperCase() + s.slice(1);
@@ -182,38 +182,29 @@ const dataProvider = (client: GraphQLClient): Required<DataProvider> => {
 
         updateMany: async ({ resource, ids, variables, meta }) => {
             const singularResource = pluralize.singular(resource);
-            const camelUpdateName = camelCase(`update-${singularResource}`);
+            const camelUpdateName = camelCase(`${singularResource}`);
 
             const operation = meta?.operation ?? camelUpdateName;
 
-            const response = await Promise.all(
-                ids.map(async (id) => {
-                    const { query, variables: gqlVariables } = gql.mutation({
-                        operation,
-                        variables: {
-                            input: {
-                                value: { where: { id }, data: variables },
-                                type: `${camelUpdateName}Input`,
-                            },
-                        },
-                        fields: [
-                            {
-                                operation: singularResource,
-                                fields: meta?.fields ?? ["id"],
-                                variables: {},
-                            },
-                        ],
-                    });
-                    const result = await client.request<BaseRecord>(
-                        query,
-                        gqlVariables,
-                    );
+            const { query, variables: gqlVariables } = gql.mutation({
+                operation,
+                variables: {
+                    op: {
+                        value: 'UPDATE',
+                        type: 'ElideRelationshipOp'
+                    },
+                    data: {
+                        value: variables,
+                        type: `[${capitalize(singularResource + 'Input')}]`,
+                    },
+                },
+                fields: [{ edges: [{ node: ["id"] }] }]
+            });
 
-                    return result[operation];
-                }),
-            );
+            const response = await client.request<BaseRecord>(query, gqlVariables);
+
             return {
-                data: response,
+                data: response[operation]?.edges.map((e: any) => e.node)
             };
         },
 
@@ -331,8 +322,11 @@ const dataProvider = (client: GraphQLClient): Required<DataProvider> => {
                     if (method === "get") {
                         const { query, variables } = gql.query({
                             operation: meta.operation,
-                            fields: meta.fields,
                             variables: meta.variables,
+                            fields: [
+                                {
+                                    edges: [{ node: meta?.fields }],
+                                }],
                         });
 
                         const response = await gqlClient.request<BaseRecord>(
@@ -346,8 +340,11 @@ const dataProvider = (client: GraphQLClient): Required<DataProvider> => {
                     } else {
                         const { query, variables } = gql.mutation({
                             operation: meta.operation,
-                            fields: meta.fields,
                             variables: meta.variables,
+                            fields: [
+                                {
+                                    edges: [{ node: meta?.fields }],
+                                }],
                         });
 
                         const response = await gqlClient.request<BaseRecord>(

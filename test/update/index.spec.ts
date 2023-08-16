@@ -2,48 +2,21 @@ import dataProvider from "../../src/index";
 import client from "../utils";
 import "./index.mock";
 
-describe("create", () => {
-    it("correct response with meta", async () => {
+describe("update", () => {
+    it("correct updated response", async () => {
         const { data } = await dataProvider(client).update({
-            resource: "posts",
-            id: "21",
+            resource: "post",
+            id: 1,
             variables: {
-                title: "updated-foo",
-                content: "updated-bar",
-                category: "2",
+                id: 1,
+                title: "foo",
+                content: "bar"
             },
             meta: {
-                fields: [
-                    {
-                        operation: "post",
-                        fields: [
-                            "id",
-                            "title",
-                            "content",
-                            { category: ["id"] },
-                        ],
-                        variables: {},
-                    },
-                ],
+                fields: ['id']
             },
         });
 
-        expect(data["title"]).toEqual("updated-foo");
-        expect(data["content"]).toEqual("updated-bar");
-        expect(data["category"].id).toEqual("2");
-    });
-
-    it("correct response without meta", async () => {
-        const { data } = await dataProvider(client).update({
-            resource: "posts",
-            id: "21",
-            variables: {
-                title: "updated-foo-2",
-                content: "updated-bar-2",
-                category: "3",
-            },
-        });
-
-        expect(data["id"]).toEqual("21");
+        expect(data.id).toBe(4)
     });
 });

@@ -1,51 +1,46 @@
 import nock from "nock";
-import { ELIDE_GRAPHQL_API_URL } from "../utils";
+import { ELIDE_SERVICE_URL, ELIDE_GRAPHQL_ENDPOINT } from "../utils";
 
-nock(ELIDE_GRAPHQL_API_URL, { encodedQueryParams: true })
-    .get("/group")
+nock(ELIDE_SERVICE_URL)
+    .post(ELIDE_GRAPHQL_ENDPOINT,
+        "{\"query\":\"query ($sort: String, $filter: String) { post (sort: $sort, filter: $filter) { edges { node { id, title } } } }\",\"variables\":{\"sort\":\"id\",\"filter\":\"title==1\"}}"
+    )
     .reply(
         200,
         {
-            "data": [
-                {
-                    "type": "group",
-                    "id": "com.example.repository",
-                    "attributes": {
-                        "commonName": "string",
-                        "description": "string"
-                    },
-                    "relationships": {
-                        "products": {
-                            "data": []
+            "data": {
+                "post": {
+                    "edges": [
+                        {
+                            "node": {
+                                "id": "9",
+                                "title": "das"
+                            }
                         }
-                    }
-                },
-                {
-                    "type": "group",
-                    "id": "com.yahoo.elide",
-                    "attributes": {
-                        "commonName": "Elide",
-                        "description": "The magical library powering this project"
-                    },
-                    "relationships": {
-                        "products": {
-                            "data": [
-                                {
-                                    "type": "product",
-                                    "id": "elide-core"
-                                },
-                                {
-                                    "type": "product",
-                                    "id": "elide-standalone"
-                                },
-                                {
-                                    "type": "product",
-                                    "id": "elide-datastore-hibernate5"
-                                }
-                            ]
-                        }
-                    }
+                    ]
                 }
-            ]
+            }
+        }
+    );
+
+nock(ELIDE_SERVICE_URL)
+    .post(ELIDE_GRAPHQL_ENDPOINT,
+        "{\"query\":\"mutation ($input: PostInput) {\\n      post (input: $input) {\\n    edges { node { post  { id, title } } }\\n  }\\n    }\",\"variables\":{\"input\":{\"where\":{\"id\":\"32\"},\"data\":{\"title\":\"custom-foo\"}}}}"
+    )
+    .reply(
+        200,
+        {
+            "data": {
+                "post": {
+                    "edges":
+                    {
+                        "node": {
+                            "id": "32",
+                            "title": "custom-foo"
+                        }
+                    }
+
+                }
+            }
         }
     );
